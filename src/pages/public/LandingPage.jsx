@@ -1,8 +1,10 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BookOpen, Users, Award, TrendingUp, Star, CheckCircle, Play } from 'lucide-react';
 import CourseCard from '../../components/CourseCard';
 import Footer from '../../components/Footer';
 import { MOCK_COURSES } from '../../utils/helpers';
+import { courseApi } from '../../api/courseApi';
 
 const stats = [
   { icon: BookOpen, label: 'Courses', value: '500+', color: 'text-blue-600 bg-blue-50' },
@@ -24,7 +26,30 @@ const testimonials = [
 ];
 
 const LandingPage = () => {
-  const featured = MOCK_COURSES.filter(c => c.featured).slice(0, 4);
+  const [featured, setFeatured] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFeaturedCourses = async () => {
+      try {
+        const res = await courseApi.getAll();
+        const allCourses = res.data || [];
+        const featuredCourses = allCourses.filter(c => c.featured);
+        if (featuredCourses.length > 0) {
+          setFeatured(featuredCourses.slice(0, 4));
+        } else {
+          setFeatured(allCourses.slice(0, 4));
+        }
+      } catch (err) {
+        console.warn('Backend API failed, falling back to mock data for development');
+        setFeatured(MOCK_COURSES.filter(c => c.featured).slice(0, 4));
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchFeaturedCourses();
+  }, []);
 
   return (
     <div className="min-h-screen">
